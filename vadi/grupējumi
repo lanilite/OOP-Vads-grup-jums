@@ -1,0 +1,150 @@
+#include <iostream>
+#include <vector>
+
+class Soldier {
+public:
+    Soldier() {
+        this->health = rand() % 100 + 1;
+        this->damage = rand() % 50 + 1;
+    }
+
+    int GetDamage() {
+        return this->damage;
+    }
+
+    int GetHealth() {
+        return this->health;
+    }
+
+    void TakeDamage(int damage) {
+        if (damage <= 0 || Alive() == false)
+            return;
+
+        this->health -= damage;
+
+        std::cout << "The soldier took damage\n" << "Damage: " << damage << std::endl;
+
+        if (health > 0)
+            std::cout << "Remaining health: " << this->health << std::endl;
+        else
+            std::cout << "Soldier died\n";
+    }
+
+    bool Alive() {
+        if (health > 0) return true;
+        return false;
+    }
+private:
+    int health;
+    int damage;
+};
+
+class Platoon {
+public:
+    Platoon(std::string name, int size) {
+        for (int i = 0; i < size; i++) {
+            std::cout << name << " platoon was created\n";
+
+            this->name = name;
+
+            auto newSoldier = new Soldier();
+            this->soldiers.push_back(newSoldier);
+
+            std::cout << "A soldier (" << newSoldier->GetDamage() << "/" << newSoldier->GetHealth() 
+                      << ") has been added to the " << name << " platoon\n";
+        }
+    }
+
+    std::vector<Soldier*> GetSoldiers() {
+        return this->soldiers;
+    }
+
+    std::string GetName() {
+        return this->name;
+    }
+
+    bool HasAliveSoldiers() {
+        for (Soldier* soldier : this->soldiers)
+            if (soldier->Alive()) return true;
+
+        return false;
+    }
+
+    Soldier* GetSoldier() {
+        for (Soldier* soldier : this->soldiers)
+            if (soldier->Alive()) return soldier;
+
+        throw std::logic_error("No alive soldiers");
+    }
+private:
+    std::vector<Soldier*> soldiers;
+    std::string name;
+};
+
+int main()
+{
+    srand(time(NULL));
+
+    std::string name;
+    int size;
+
+    std::cout << "Enter first platoon name: ";
+    std::cin >> name;
+    std::cout << "Enter first platoon size: ";
+    std::cin >> size;
+
+    std::cout << std::endl;
+
+    auto firstPlatoon = new Platoon(name, size);
+
+    std::cout << std::endl;
+
+    std::cout << "Enter second platoon name: ";
+    std::cin >> name;
+    std::cout << "Enter second platoon size: ";
+    std::cin >> size;
+
+    std::cout << std::endl;
+
+    auto secondPlatoon = new Platoon(name, size);
+
+    std::cout << std::endl;
+
+    bool completed = false;
+    std::cout << "Simulation started\n\n";
+
+    while (completed == false) {
+        for (Soldier* attacking : firstPlatoon->GetSoldiers()) {
+            if (firstPlatoon->HasAliveSoldiers() == false) {
+                completed = true;
+
+                std::cout << "No living soldiers in the " << firstPlatoon->GetName() << std::endl;
+
+                break;
+            }
+
+            if (secondPlatoon->HasAliveSoldiers() == false) {
+                completed = true;
+
+                std::cout << "No living soldiers in the " << secondPlatoon->GetName() << std::endl;
+
+                break;
+            }
+
+            if (attacking->Alive() == false)
+                continue;
+
+            Soldier* attacked = secondPlatoon->GetSoldier();
+            attacked->TakeDamage(attacking->GetDamage());
+            attacking->TakeDamage(attacked->GetDamage());
+
+            std::cout << std::endl;
+        }
+
+        Platoon* t = firstPlatoon;
+        firstPlatoon = secondPlatoon;
+        secondPlatoon = firstPlatoon;
+    }
+
+    std::cout << "\nSimulation completed";
+}
